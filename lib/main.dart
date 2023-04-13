@@ -50,6 +50,14 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
 
+  TextEditingController _wifiLoginUrlTextController = TextEditingController();
+  TextEditingController _usernameTextController = TextEditingController();
+  TextEditingController _passwordTextController = TextEditingController();
+
+  String _wifiLoginUrl = '';
+  String _username = '';
+  String _password = '';
+
   void _incrementCounter() {
     setState(() {
       // This call to setState tells the Flutter framework that something has
@@ -58,6 +66,14 @@ class _MyHomePageState extends State<MyHomePage> {
       // _counter without calling setState(), then the build method would not be
       // called again, and so nothing would appear to happen.
       _counter++;
+    });
+  }
+
+  void _getWifiLoginUrl() {
+    setState(() {
+      _wifiLoginUrl = _wifiLoginUrlTextController.text;
+      _username = _usernameTextController.text;
+      _password = _passwordTextController.text;
     });
   }
 
@@ -95,6 +111,24 @@ class _MyHomePageState extends State<MyHomePage> {
           // horizontal).
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            TextField(
+              controller: _wifiLoginUrlTextController,
+              decoration: InputDecoration(
+                hintText: 'Enter the login url of the wifi here',
+              ),
+            ),
+            TextField(
+              controller: _usernameTextController,
+              decoration: InputDecoration(
+                hintText: 'Enter your username here',
+              ),
+            ),
+            TextField(
+              controller: _passwordTextController,
+              decoration: InputDecoration(
+                hintText: 'Enter your password here',
+              ),
+            ),
             const Text(
               'You have pushed the button this many times:',
             ),
@@ -106,7 +140,10 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
+        onPressed:() { // TODO unsafe thread, use async
+          _incrementCounter();
+          _getWifiLoginUrl();
+        },
         tooltip: 'Increment',
         child: const Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
