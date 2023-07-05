@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:html/parser.dart' as parser;
 
 void main() {
   runApp(const MyApp());
@@ -58,23 +60,49 @@ class _MyHomePageState extends State<MyHomePage> {
   String _username = '';
   String _password = '';
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
+  Future<void> _login() async {
+    var client = http.Client();
+    try {
 
-  void _getWifiLoginUrl() {
-    setState(() {
       _wifiLoginUrl = _wifiLoginUrlTextController.text;
       _username = _usernameTextController.text;
       _password = _passwordTextController.text;
-    });
+
+      // Get the login page
+      var response = await client.get(Uri.parse(_wifiLoginUrl));
+
+      // Parse the HTML response
+      var document = parser.parse(response.body);
+
+      // Extract the login form fields
+      var form = document.querySelector('form[action="/login"]');
+      var csrfToken =
+          form.querySelector('input[name="_csrf"]').attributes['value'];
+      var usernameField = form.querySelector('input[name="username"]');
+      var passwordField = form.querySelector('input[name="password"]');
+
+      // Set the login credentials
+      usernameField.attributes['value'] = _username;
+      passwordField.attributes['value'] = _password;
+
+      // Submit the login request
+      var loginResponse = await client.post(
+        Uri.parse(_wifiLoginUrl),
+        body: {
+          '_csrf': csrfToken,
+          'username': _username,
+          'password': _password,
+        },
+      );
+
+      if (loginResponse.statusCode == 200) {
+        // Login successful
+      } else {
+        // Login failed
+      }
+    } finally {
+      client.close();
+    }
   }
 
   @override
@@ -129,21 +157,11 @@ class _MyHomePageState extends State<MyHomePage> {
                 hintText: 'Enter your password here',
               ),
             ),
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed:() { // TODO unsafe thread, use async
-          _incrementCounter();
-          _getWifiLoginUrl();
-        },
+        onPressed: _login,
         tooltip: 'Increment',
         child: const Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
